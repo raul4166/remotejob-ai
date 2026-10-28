@@ -1,28 +1,55 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="card">
-    <div class="card-body">
-        <h3>Profile Management</h3>
-        <form method="POST">
-            <div class="row g-3">
-                <div class="col-md-6"><label class="form-label">Full Name</label><input class="form-control" name="full_name" value="{{ profile.full_name or '' }}"></div>
-                <div class="col-md-6"><label class="form-label">Professional Title</label><input class="form-control" name="professional_title" value="{{ profile.professional_title or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">Country</label><input class="form-control" name="country" value="{{ profile.country or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">Time Zone</label><input class="form-control" name="time_zone" value="{{ profile.time_zone or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">Years of Experience</label><input class="form-control" name="years_of_experience" value="{{ profile.years_of_experience or '' }}"></div>
-                <div class="col-md-12"><label class="form-label">Languages</label><input class="form-control" name="languages" value="{{ profile.languages or '' }}"></div>
-                <div class="col-md-12"><label class="form-label">Technical Skills</label><textarea class="form-control" name="technical_skills">{{ profile.technical_skills or '' }}</textarea></div>
-                <div class="col-md-12"><label class="form-label">Soft Skills</label><textarea class="form-control" name="soft_skills">{{ profile.soft_skills or '' }}</textarea></div>
-                <div class="col-md-12"><label class="form-label">Work Experience</label><textarea class="form-control" name="work_experience">{{ profile.work_experience or '' }}</textarea></div>
-                <div class="col-md-12"><label class="form-label">Education</label><textarea class="form-control" name="education">{{ profile.education or '' }}</textarea></div>
-                <div class="col-md-12"><label class="form-label">Certifications</label><textarea class="form-control" name="certifications">{{ profile.certifications or '' }}</textarea></div>
-                <div class="col-md-4"><label class="form-label">Portfolio</label><input class="form-control" name="portfolio" value="{{ profile.portfolio or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">GitHub</label><input class="form-control" name="github" value="{{ profile.github or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">LinkedIn</label><input class="form-control" name="linkedin" value="{{ profile.linkedin or '' }}"></div>
-                <div class="col-md-12"><label class="form-label">Personal Website</label><input class="form-control" name="personal_website" value="{{ profile.personal_website or '' }}"></div>
-            </div>
-            <button class="btn btn-primary mt-4" type="submit">Save profile</button>
-        </form>
-    </div>
-</div>
-{% endblock %}
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from werkzeug.utils import secure_filename
+from pathlib import Path
+
+from database import db
+from models import Profile
+
+
+profile_bp = Blueprint("profile", __name__)
+
+
+@profile_bp.route("/profile", methods=["GET", "POST"])
+def edit_profile():
+    profile = Profile()
+
+    if request.method == "POST":
+        data = request.form
+        profile.full_name = data.get("full_name")
+        profile.professional_title = data.get("professional_title")
+        profile.country = data.get("country")
+        profile.time_zone = data.get("time_zone")
+        profile.languages = data.get("languages")
+        profile.technical_skills = data.get("technical_skills")
+        profile.soft_skills = data.get("soft_skills")
+        profile.years_of_experience = data.get("years_of_experience")
+        profile.work_experience = data.get("work_experience")
+        profile.education = data.get("education")
+        profile.certifications = data.get("certifications")
+        profile.portfolio = data.get("portfolio")
+        profile.github = data.get("github")
+        profile.linkedin = data.get("linkedin")
+        profile.personal_website = data.get("personal_website")
+        profile.salary_expectations = data.get("salary_expectations")
+        profile.employment_preferences = data.get("employment_preferences")
+        profile.availability = data.get("availability")
+        profile.preferred_job_categories = data.get("preferred_job_categories")
+        profile.preferred_industries = data.get("preferred_industries")
+        profile.remote_work_preferences = data.get("remote_work_preferences")
+        profile.contractor_availability = data.get("contractor_availability")
+        profile.eligible_regions = data.get("eligible_regions")
+
+        uploaded = request.files.get("resume")
+        if uploaded and uploaded.filename:
+            save_dir = Path("uploads/resumes")
+            save_dir.mkdir(parents=True, exist_ok=True)
+            safe_name = secure_filename(uploaded.filename)
+            saved_path = save_dir / safe_name
+            uploaded.save(saved_path)
+            profile.resume_file = str(saved_path)
+            flash(f"Resume saved: {safe_name}", "success")
+
+        flash("Profile updated", "success")
+        return redirect(url_for("profile.edit_profile"))
+
+    return render_template("profile.html", profile=profile)
