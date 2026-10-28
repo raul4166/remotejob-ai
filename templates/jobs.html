@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Job Search</h3>
+<form method="GET" class="row g-3 mb-4">
+    <div class="col-md-4"><input type="text" class="form-control" name="keyword" placeholder="Keyword" value="{{ keyword }}"></div>
+    <div class="col-md-3"><input type="text" class="form-control" name="source" placeholder="Source" value="{{ source }}"></div>
+    <div class="col-md-3"><input type="text" class="form-control" name="contract" placeholder="Contract" value="{{ contract }}"></div>
+    <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filter</button></div>
+</form>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Source</th>
+                    <th>Type</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>{{ job.title }}</td>
+                    <td>{{ job.company }}</td>
+                    <td>{{ job.source }}</td>
+                    <td>{{ job.contract_type or 'Unknown' }}</td>
+                    <td>
+                        <a href="{{ job.url }}" target="_blank" class="btn btn-sm btn-outline-primary">Open</a>
+                        <form action="{{ url_for('applications.create_application', job_id=job.id) }}" method="POST" class="d-inline">
+                            <button class="btn btn-sm btn-success">Apply</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
