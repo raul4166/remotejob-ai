@@ -8,7 +8,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-this")
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'remotejobai.db'}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    WTF_CSRF_ENABLED = True
+    WTF_CSRF_ENABLED = False
     UPLOAD_FOLDER = BASE_DIR / "uploads"
     EXPORT_FOLDER = BASE_DIR / "exports"
     LOG_FOLDER = BASE_DIR / "logs"
