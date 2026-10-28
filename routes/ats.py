@@ -1,35 +1,32 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="card">
-    <div class="card-body">
-        <h3>Profile Management</h3>
-        <form method="POST" enctype="multipart/form-data">
-            <div class="row g-3">
-                <div class="col-md-6"><label class="form-label">Full Name</label><input class="form-control" name="full_name" value="{{ profile.full_name or '' }}"></div>
-                <div class="col-md-6"><label class="form-label">Professional Title</label><input class="form-control" name="professional_title" value="{{ profile.professional_title or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">Country</label><input class="form-control" name="country" value="{{ profile.country or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">Time Zone</label><input class="form-control" name="time_zone" value="{{ profile.time_zone or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">Years of Experience</label><input class="form-control" name="years_of_experience" value="{{ profile.years_of_experience or '' }}"></div>
-                <div class="col-md-12"><label class="form-label">Languages</label><input class="form-control" name="languages" value="{{ profile.languages or '' }}"></div>
-                <div class="col-md-12"><label class="form-label">Technical Skills</label><textarea class="form-control" name="technical_skills">{{ profile.technical_skills or '' }}</textarea></div>
-                <div class="col-md-12"><label class="form-label">Soft Skills</label><textarea class="form-control" name="soft_skills">{{ profile.soft_skills or '' }}</textarea></div>
-                <div class="col-md-12"><label class="form-label">Work Experience</label><textarea class="form-control" name="work_experience">{{ profile.work_experience or '' }}</textarea></div>
-                <div class="col-md-12"><label class="form-label">Education</label><textarea class="form-control" name="education">{{ profile.education or '' }}</textarea></div>
-                <div class="col-md-12"><label class="form-label">Certifications</label><textarea class="form-control" name="certifications">{{ profile.certifications or '' }}</textarea></div>
-                <div class="col-md-4"><label class="form-label">Portfolio</label><input class="form-control" name="portfolio" value="{{ profile.portfolio or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">GitHub</label><input class="form-control" name="github" value="{{ profile.github or '' }}"></div>
-                <div class="col-md-4"><label class="form-label">LinkedIn</label><input class="form-control" name="linkedin" value="{{ profile.linkedin or '' }}"></div>
-                <div class="col-md-12"><label class="form-label">Personal Website</label><input class="form-control" name="personal_website" value="{{ profile.personal_website or '' }}"></div>
-                <div class="col-md-12">
-                    <label class="form-label">Resume (PDF or DOCX)</label>
-                    <input type="file" class="form-control" name="resume" accept=".pdf,.docx,.txt">
-                    {% if profile.resume_file %}
-                    <small class="text-muted">Current file: {{ profile.resume_file }}</small>
-                    {% endif %}
-                </div>
-            </div>
-            <button class="btn btn-primary mt-4" type="submit">Save profile</button>
-        </form>
-    </div>
-</div>
-{% endblock %}
+from flask import Blueprint, render_template
+
+from models import Job
+from services import analyze_job_compatibility, generate_ats_resume
+
+
+ats_bp = Blueprint("ats", __name__)
+
+
+@ats_bp.route("/ats")
+def ats_index():
+    jobs = Job.query.order_by(Job.created_at.desc()).limit(20).all()
+    return render_template("ats.html", jobs=jobs)
+
+
+@ats_bp.route("/ats/<int:job_id>")
+def analyze_job(job_id):
+    job = Job.query.get_or_404(job_id)
+    profile = type(
+        "ProfileStub",
+        (),
+        {
+            "resume_file": None,
+            "technical_skills": "",
+            "professional_title": "Technology Professional",
+            "years_of_experience": 0,
+            "work_experience": "Professional experience in software products and delivery.",
+        },
+    )()
+    analysis = analyze_job_compatibility(profile, job)
+    resume = generate_ats_resume(profile, job)
+    return render_template("ats.html", job=job, analysis=analysis, resume=resume, jobs=Job.query.order_by(Job.created_at.desc()).limit(20).all())
